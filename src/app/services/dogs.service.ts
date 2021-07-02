@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { Observable, of } from 'rxjs'; // OPTIONAL: Observables value-add
+import { map } from 'rxjs/operators';
 import { Dog } from '../models/dog'; // OPTIONAL: Observables value-add.
-import DOGS from '../dogdata.json';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DogsService {
-  private dogData: Dog[] = DOGS;
+  private url: string = environment.dataUrl;
 
-  constructor() {
+  constructor(private http: HttpClient) {
     const likes = localStorage.getItem('likes');
     if (!likes) {
       localStorage.setItem('likes', JSON.stringify([]));
@@ -17,16 +19,17 @@ export class DogsService {
   }
 
   all(): Observable<Dog[]> {
-    return of(this.dogData);
+    return this.http.get(`${this.url}/dogs`) as Observable<Dog[]>;
   }
 
-  get(dogId: string): Dog[] {
-    return this.dogData.filter(dog => dog.id === dogId);
+  get(dogId: string): Observable<Dog[]> {
+    return this.all().pipe(
+      map(dogs => dogs.filter(dog => dog.id === dogId))
+    );
   }
 
   getLikes(dogId): number {
     const likes = JSON.parse(localStorage.getItem('likes'));
-    // tslint:disable-next-line:radix
     return parseInt(likes[dogId]);
   }
 
